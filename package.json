@@ -1,0 +1,17 @@
+{
+  "name": "naverpay-notice-feed",
+  "version": "1.0.0",
+  "description": "네이버페이 공지사항을 feed로 변환",
+  "main": "app.js",
+  "scripts": {
+    "run-test": "GIT_PATH=/home/ubuntu/data/gilchris.github.io node app.js"
+  },
+  "author": "gilchris",
+  "license": "AGPL-3.0-only",
+  "dependencies": {
+    "axios": "^1.7.8",
+    "dotenv": "^16.4.5",
+    "feed": "^4.2.2",
+    "jsdom": "^25.0.1"
+  }
+}
