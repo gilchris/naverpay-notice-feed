@@ -1,8 +1,9 @@
 const axios = require('axios');
-const { JSDOM } = require('jsdom');
+const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
 const { Feed } = require('feed');
+const { log } = require('console');
 require("dotenv").config();
 
 const URL = "https://admin.pay.naver.com/notice";
@@ -12,22 +13,18 @@ const ATOM_FILE = path.join(DATA_DIR, process.env.FEED_FILE || "naverpay_notice_
 
 // 공지사항 HTML 파싱 함수
 async function parseNotices(html) {
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
-
-    const rows = document.querySelectorAll("#noticeList tbody tr");
+    const $ = cheerio.load(html);
     const notices = [];
 
-    rows.forEach(row => {
-        const id = row.querySelector("td:nth-child(1) .num")?.textContent.trim();
-        const category = row.querySelector("td:nth-child(2)")?.textContent.trim();
-        const titleElement = row.querySelector("td:nth-child(3) a");
-        const title = titleElement?.textContent.trim();
-        const link = titleElement ? `https://admin.pay.naver.com${titleElement.getAttribute("href")}` : null;
-        const date = row.querySelector("td:nth-child(4) .num")?.textContent.trim();
-        const views = row.querySelector("td:nth-child(5) .num")?.textContent.trim();
+    $('#noticeList tbody tr').each((_, element) => {
+        const id = $(element).find('td:nth-child(1) .num').text().trim();
+        const category = $(element).find('td:nth-child(2)').text().trim();
+        const title = $(element).find('td:nth-child(3) a').text().trim();
+        const link = `https://admin.pay.naver.com${$(element).find('td:nth-child(3) a').attr('href')}`;
+        const date = $(element).find('td:nth-child(4) .num').text().trim();
+        const views = $(element).find('td:nth-child(5) .num').text().trim();
 
-        if (id && title && link && date) {
+        if (id) {
             notices.push({ id, category, title, link, date, views });
         }
     });
@@ -86,8 +83,6 @@ async function saveAtomFeed(feed) {
 // 메인 실행 함수
 (async () => {
     try {
-        console.log("네이버페이 공지사항 업데이트 시작...");
-
         const newNotices = await fetchNotices();
         const existingNotices = await loadExistingNotices();
 
